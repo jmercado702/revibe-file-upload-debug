@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Price Extraction Debug</title>
+</head>
+<body>
+    <h1>Price Extraction Test</h1>
+    <div id="results"></div>
+
+    <script>
+// Helper function to extract prices from text like "$65,000" or "$40,000-$50,000"
+function extractPricesFromText(text) {
+    if (!text) return [];
+    
+    console.log('Extracting prices from text:', text);
+    
+    // Multiple regex patterns to catch different price formats
+    const patterns = [
+        /\$(\d{1,3}(?:,\d{3})+(?:\.\d{2})?)/g,  // $65,000 or $65,000.00
+        /(\d{1,3}(?:,\d{3})+(?:\.\d{2})?)/g,    // 65,000 or 65,000.00
+        /\$(\d{4,}(?:\.\d{2})?)/g,              // $65000 or $65000.00  
+        /(\d{4,}(?:\.\d{2})?)/g                 // 65000 or 65000.00
+    ];
+    
+    let allPrices = [];
+    
+    for (let pattern of patterns) {
+        let matches = text.match(pattern);
+        if (matches) {
+            console.log(`Pattern ${pattern} found matches:`, matches);
+            for (let match of matches) {
+                // Remove $ and commas, then parse as float
+                const cleanPrice = match.replace(/[$,]/g, '');
+                const parsed = parseFloat(cleanPrice);
+                if (!isNaN(parsed) && parsed >= 1000) {  // Only accept prices >= $1000
+                    console.log(`Converted "${match}" -> "${cleanPrice}" -> ${parsed}`);
+                    allPrices.push(parsed);
+                }
+            }
+        }
+    }
+    
+    // Remove duplicates and sort
+    const uniquePrices = [...new Set(allPrices)].sort((a, b) => b - a);
+    console.log('Final extracted prices:', uniquePrices);
+    
+    return uniquePrices;
+}
+
+// Test cases matching your exact AI responses
+const testCases = [
+    "$3,000 - $5,000",      // Industrial fan retail price
+    "$1,500 - $2,500",      // Industrial fan suggested price
+    "$55,000 - $65,000",    // Lexus retail price
+    "$40,000 - $50,000",    // Lexus suggested price
+    "3,000 - 5,000",
+    "1,500 - 2,500"
+];
+
+const resultsDiv = document.getElementById('results');
+
+testCases.forEach(testCase => {
+    const result = extractPricesFromText(testCase);
+    resultsDiv.innerHTML += `<p><strong>Input:</strong> ${testCase}<br><strong>Result:</strong> ${JSON.stringify(result)}</p>`;
+});
+    </script>
+</body>
+</html>
